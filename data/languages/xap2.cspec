@@ -38,7 +38,7 @@
   </returnaddress>
 
   <default_proto>
-    <prototype name="__stdcall" extrapop="4" stackshift="4">
+    <prototype name="__stdcall" extrapop="0" stackshift="0">
       <input>
         <pentry minsize="1" maxsize="2">
           <register name="al"/>
