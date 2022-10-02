@@ -1,0 +1,340 @@
+define endian=little;
+define alignment=2;
+
+define space code     type=ram_space      size=3 wordsize=2 default;
+define space register type=register_space size=2;
+define space mem      type=ram_space      size=3 wordsize=1;
+
+define register offset=0x0 size=4 [ a x flags ];
+define register offset=0x0 size=2 [ ah al xh xl y pc lr ];
+define register offset=0x8 size=1 [ c s n z ];
+
+define register offset=0x100 size=4 contextreg;
+
+define context contextreg
+    ext1=(0,7) noflow
+    ext2=(8,15) noflow
+    u=(16,16) noflow
+    num_prefix=(17,18) noflow
+;
+
+define token opc (16)
+    f_all=(0,15)
+    f_sopnd=(8,15) signed
+    f_opnd=(8,15) 
+    f_opnd_hi1=(15,15)
+    f_opnd_lo4=(8,11)
+    dummy1=(13,15)
+    dummy2=(8,12)
+    f_opc=(4,7)
+    f_right=(0,3)
+    f_ld=(0,3)
+    f_st=(0,3)
+    f_mid=(1,2)
+    f_reg=(2,3)
+    f_mode=(0,1)
+    f_byte=(0,7)
+;
+
+attach variables [ f_reg ] [ ah al xl y ];
+attach variables [ f_mode ] [ _ _ xl y ];
+attach variables [ f_ld ] [ _ _ _ _ _ _ xl y _ _ _ _ _ _ xh _ ];
+attach variables [ f_st ] [ _ _ xl y _ _ _ _ _ _ xh _ _ _ _ _ ];
+
+imm: "#"val                is f_sopnd & ext1
+[ val = f_sopnd + (ext1 << 8); ]
+{ export *[const]:2 val; }
+
+data: imm                  is f_mode=0 & imm                  { export imm; }
+data: "@XAP_AH"            is f_mode=1 & f_opnd=0xe0          { export ah; }
+data: "@XAP_AL"            is f_mode=1 & f_opnd=0xe1          { export al; }
+data: "@XAP_UXH"           is f_mode=1 & f_opnd=0xe2          { export xh; }
+data: "@XAP_UXL"           is f_mode=1 & f_opnd=0xe3          { export xl; }
+data: "@XAP_UY"            is f_mode=1 & f_opnd=0xe4          { export y; }
+data: "@H'"f_opnd          is f_mode=1 & dummy1!=0x3 & f_opnd & ext1 { 
+    local tmp:2 = zext(f_opnd:1); 
+    tmp = (0xff00 * (tmp >> 7)) + tmp; 
+    tmp = tmp + sext(ext1:1 << 8);
+    tmp = tmp * 2;
+    export *[mem]:2 tmp; 
+}
+data: "@(#"f_sopnd^, "x)" is f_mode=2 & f_sopnd & ext1 { 
+    local tmp:2 = (sext(ext1:1) << 8) + sext(f_sopnd:1) + xl; # should be xh or xl?
+    #tmp = tmp * 2; 
+    export *[mem]:2 tmp; 
+}
+data: "@(#"f_sopnd^, "y)" is f_mode=3 & f_sopnd & ext1 { 
+    local tmp:2 = (sext(ext1:1) << 8) + sext(f_sopnd:1) + y; 
+    #tmp = tmp * 2; 
+    export *[mem]:2 tmp; 
+}
+
+branch_addr: reloc     is f_mode=0 & f_sopnd & ext1 & ext2 & num_prefix
+[ reloc = inst_start + num_prefix + f_sopnd + (ext1 << 8) + (ext2 << 16); ]
+{ export *[code]:3 reloc; }
+
+branch_addr: "@"f_opnd          is f_mode=1 & f_opnd  { 
+    local tmp:2 = zext(f_opnd:1); 
+    tmp = (0xff00 * (tmp >> 7)) + tmp; 
+    #tmp = tmp * 2;
+    local ptr:3 = zext(tmp);
+    export *[mem]:3 ptr; 
+}
+branch_addr: "X + #"f_opnd      is f_mode=2 & f_opnd & ext1 & ext2  { 
+    local tmp:3 = zext(f_opnd:1) + zext(xh); 
+    tmp = tmp + (zext(ext1:1) << 8) + (zext(ext2:1) << 16);
+    #tmp = tmp * 2;
+    export *[code]:3 tmp; 
+}
+branch_addr: "@(#"f_opnd^, "y)" is f_mode=3 & f_opnd & ext1 { 
+    local tmp:3 = zext(f_opnd:1) + zext(y); 
+    tmp = tmp + (zext(ext1:1) << 8);
+    #tmp = tmp * 2;
+    export *[mem]:3 tmp; 
+}
+
+macro nzflags(value) {
+ n = value s< 0;
+ z = value == 0;
+}
+
+macro csnzflags(op1, op2, value) {
+ c = carry(op1, op2);
+ n = value s< 0;
+ s = value s< 0;
+ z = value == 0;
+}
+
+:^instruction is (f_byte=0 & f_opnd); instruction
+[
+    ext2 = ext1; 
+    ext1 = f_opnd; 
+    num_prefix = num_prefix + 1;
+]
+{
+    build instruction;
+}
+
+#:prefix "#H'"f_opnd is f_byte=0 & f_opnd
+#[ 
+#    ext2 = ext1; 
+#    ext1 = f_opnd; 
+#    globalset(inst_next, ext1); 
+#    globalset(inst_next, ext2); 
+#    globalset(inst_next, u);
+#]
+#{}
+
+:nop is f_all=0 {}
+:sleep is f_opc=0 & f_right=8 & f_opnd=0 {}
+
+:ld f_ld, data is f_opc=0 & f_ld & f_mid=3 & data {
+    f_ld = data;
+    nzflags(f_ld);
+}
+
+:ld f_reg, data is f_opc=1 & f_reg & data {
+    f_reg = data;
+    nzflags(f_reg);
+}
+
+:st f_st, data is f_opc=0 & f_st & f_mid=1 & data {
+    f_st = data;
+    nzflags(f_st);
+}
+
+:st f_reg, data is f_opc=2 & f_reg & data & f_mode!=0 {
+    data = f_reg;
+    nzflags(data);
+}
+
+:add f_reg, data is f_opc=3 & f_reg & data {
+    local tmp:2 = f_reg;
+    f_reg = f_reg + data;
+    csnzflags(tmp, data, f_reg);
+}
+
+:addc f_reg, data is f_opc=4 & f_reg & data {
+    local tmp:2 = f_reg;
+    f_reg = f_reg + data + zext(c);
+    csnzflags(tmp, data, f_reg);
+}
+
+:sub f_reg, data is f_opc=5 & f_reg & data {
+    local tmp:2 = f_reg;
+    f_reg = f_reg - data;
+    csnzflags(tmp, data, f_reg);
+}
+
+:subc f_reg, data is f_opc=6 & f_reg & data {
+    local tmp:2 = f_reg;
+    f_reg = f_reg - data - zext(c);
+    csnzflags(tmp, data, f_reg);
+}
+
+:nadd f_reg, data is f_opc=7 & f_reg & data {
+    local tmp:2 = f_reg;
+    f_reg = -f_reg + data;
+    csnzflags(tmp, data, f_reg);
+}
+
+:cmp f_reg, data is f_opc=8 & f_reg & data {
+    local tmp:2 = f_reg - data;
+    csnzflags(f_reg, data, tmp);
+}
+
+:or f_reg, data is f_opc=0xb & f_reg & data {
+    local tmp:2 = f_reg;
+    f_reg = f_reg | data;
+    csnzflags(tmp, data, f_reg);
+}
+
+:and f_reg, data is f_opc=0xc & f_reg & data {
+    local tmp:2 = f_reg;
+    f_reg = f_reg & data;
+    csnzflags(tmp, data, f_reg);
+}
+
+:xor f_reg, data is f_opc=0xd & f_reg & data {
+    local tmp:2 = f_reg;
+    f_reg = f_reg ^ data;
+    csnzflags(tmp, data, f_reg);
+}
+
+:unsigned is f_all=9 [
+    u = 1;
+    globalset(inst_next, u);
+]
+{}
+
+:umult data is u=1 & f_opc=9 & f_reg=0 & data {
+    a = zext(ah) + zext(al) * zext(data);
+}
+
+:smult data is u=0 & f_opc=9 & f_reg=0 & data {
+    a = sext(ah) + sext(al) * sext(data);
+}
+
+:udiv data is u=1 & f_opc=9 & f_reg=1 & data {
+    a = a >> 1;
+
+    local tmp:4 = a / zext(data);
+    al = tmp:2;
+
+    tmp = (a % zext(data)) << 1;
+    ah = ah | tmp:2;
+}
+
+:sdiv data is u=0 & f_opc=9 & f_reg=1 & data {
+    a = a s>> 1;
+
+    local tmp:4 = a s/ sext(data);
+    al = tmp:2;
+
+    tmp = (a s% sext(data)) << 1;
+    ah = ah | tmp:2;
+}
+
+:tst data is f_opc=9 & f_reg=2 & data {
+    nzflags(data);
+}
+
+:bsr branch_addr is f_opc=9 & f_reg=3 & branch_addr {
+    lr = inst_next >> 1;
+    call branch_addr;
+}
+
+:lsl data is f_all=9; f_opc=0xa & f_reg=0 & data {
+    local tmp:2 = al;
+    al = al << data;
+    csnzflags(tmp, data, al);
+}
+
+:asl data is f_opc=0xa & f_reg=0 & data {
+    local tmp:2 = al;
+    al = al << data;
+    csnzflags(tmp, data, al);
+}
+
+:lsr data is f_all=9; f_opc=0xa & f_reg=1 & data {
+    local tmp:2 = al;
+    al = al >> data;
+    csnzflags(tmp, data, al);
+}
+
+:asr data is f_opc=0xa & f_reg=1 & data {
+    local tmp:2 = al;
+    al = al s>> data;
+    csnzflags(tmp, data, al);
+}
+
+:asr data is f_opc=0xa & f_reg=2 & data {
+    local tmp:2 = al;
+    al = al s>> data;
+    csnzflags(tmp, data, al);
+}
+
+:rts is f_opc=0xe & f_right=2 & f_opnd=0 {
+    return [lr];
+}
+
+:bra branch_addr is f_opc=0xe & f_reg=0 & branch_addr {
+    goto branch_addr;
+}
+
+:blt branch_addr is f_opc=0xe & f_reg=1 & branch_addr {
+    if (s == 1) goto branch_addr;
+}
+
+:bpl branch_addr is f_opc=0xe & f_reg=2 & branch_addr {
+    if (n == 0) goto branch_addr;
+}
+
+:bmi branch_addr is f_opc=0xe & f_reg=3 & branch_addr {
+    if (n == 1) goto branch_addr;
+}
+
+:bne branch_addr is f_opc=0xf & f_reg=0 & branch_addr {
+    if (z == 0) goto branch_addr;
+}
+
+:beq branch_addr is f_opc=0xf & f_reg=1 & branch_addr {
+    if (z == 1) goto branch_addr;
+}
+
+:bcc branch_addr is f_opc=0xf & f_reg=2 & branch_addr {
+    if (c == 0) goto branch_addr;
+}
+
+:bcs branch_addr is f_opc=0xf & f_reg=3 & branch_addr {
+    if (c == 1) goto branch_addr;
+}
+
+:enterl imm is f_opc=0 & f_right=0xb & imm {
+    y = y + imm;
+}
+
+:leavel imm is f_opc=0 & f_right=0xf & imm {
+    y = y - imm;
+    return [lr];
+}
+
+:brxl is f_opc=0 & f_right=9 & f_opnd=0xfe {
+    goto [xl];
+}
+
+:bgt branch_addr is f_opc=2 & f_mode=0 & f_reg=0 & branch_addr {
+    if ((n == 0) && (z == 0)) goto branch_addr;
+}
+
+:bge branch_addr is f_opc=2 & f_mode=0 & f_reg=1 & branch_addr {
+    if (n == 0) goto branch_addr;
+}
+
+:ble branch_addr is f_opc=2 & f_mode=0 & f_reg=2 & branch_addr {
+    if ((n == 1) && (z == 1)) goto branch_addr;
+}
+
+:bcz branch_addr is f_opc=2 & f_mode=0 & f_reg=3 & branch_addr {
+    if ((c == 1) && (z == 1)) goto branch_addr;
+}

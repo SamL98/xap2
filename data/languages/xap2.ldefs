@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<language_definitions>
+  <language processor="xap2"
+            endian="little"
+            size="16"
+            variant="default"
+            version="2.0"
+            slafile="xap2.sla"
+            processorspec="xap2.pspec"
+            id="xap2:LE:16:default">
+    <description>xap2 Microcontroller Family</description>
+    <compiler name="default" spec="xap2.cspec" id="default"/>
+  </language>
+</language_definitions>

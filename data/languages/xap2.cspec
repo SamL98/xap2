@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<compiler_spec>
+  <data_organization>
+     <absolute_max_alignment value="1" />
+     <machine_alignment value="1" />
+     <default_alignment value="1" />
+     <default_pointer_alignment value="1" />
+     
+     <pointer_size value="2" />
+     <char_size value="1" />
+     <wchar_size value="2" />
+     
+     <short_size value="2" />
+     <integer_size value="2" />
+     <long_size value="4" />
+     <long_long_size value="8" />
+     <float_size value="4" />
+     <double_size value="4" />
+     <long_double_size value="4" />
+     
+     <size_alignment_map>
+          <entry size="1" alignment="1" />
+          <entry size="2" alignment="2" />
+          <entry size="4" alignment="4" />
+          <entry size="8" alignment="8" />
+     </size_alignment_map>
+  </data_organization>
+
+  <global>
+    <range space="code"/>
+    <range space="mem"/>
+  </global>
+
+  <stackpointer register="y" space="mem"/>
+  <returnaddress>
+      <register name="lr"/>
+  </returnaddress>
+
+  <default_proto>
+    <prototype name="__stdcall" extrapop="4" stackshift="4">
+      <input>
+        <pentry minsize="1" maxsize="2">
+          <register name="al"/>
+        </pentry>
+        <pentry minsize="1" maxsize="2">
+          <register name="ah"/>
+        </pentry>
+        <pentry minsize="3" maxsize="4">
+          <register name="a"/>
+        </pentry>
+        <pentry minsize="1" maxsize="500" align="2">
+          <addr offset="2" space="stack"/>
+        </pentry>
+      </input>
+      <output>
+        <pentry minsize="1" maxsize="2">
+          <register name="al"/>
+        </pentry>
+        <pentry minsize="3" maxsize="4">
+          <register name="a"/>
+        </pentry>
+      </output>
+      <unaffected>
+        <register name="y"/>
+      </unaffected>
+    </prototype>
+  </default_proto>
+</compiler_spec>
