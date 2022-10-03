@@ -68,8 +68,8 @@ data: "@(#"f_sopnd^, "y)" is f_mode=3 & f_sopnd & ext1 {
     export *[mem]:2 tmp; 
 }
 
-branch_addr: reloc     is f_mode=0 & f_sopnd & ext1 & ext2 & num_prefix
-[ reloc = inst_start + num_prefix + f_sopnd + (ext1 << 8) + (ext2 << 16); ]
+branch_addr: reloc     is f_mode=0 & f_opnd & ext1 & ext2 & num_prefix
+[ reloc = (inst_start + num_prefix) + (f_opnd + (ext1 << 8) + (ext2 << 16)) * ((-2 * (ext2 >> 7)) + 1); ]
 { export *[code]:3 reloc; }
 
 branch_addr: "@"f_opnd          is f_mode=1 & f_opnd  { 
@@ -110,6 +110,10 @@ macro csnzflags(op1, op2, value) {
 {
     build instruction;
 }
+
+# TODO: Figure out what bc/bc2 do
+:bc  is f_opc=0 & f_opnd=0xff {}
+:bc2 is f_opc=0 & f_opnd=0xfd {}
 
 :nop is f_all=0 {}
 :sleep is f_opc=0 & f_right=8 & f_opnd=0 {}
