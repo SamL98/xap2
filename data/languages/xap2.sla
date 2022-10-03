@@ -2166,69 +2166,12 @@
 </op_tpl>
 </construct_tpl>
 </constructor>
-<decision number="15" context="false" start="6" size="2">
+<decision number="9" context="false" start="6" size="2">
 <decision number="1" context="false" start="0" size="0">
 <pair id="0">
 <instruct_pat>
 <pat_block offset="0" nonzero="1">
   <mask_word mask="0x3000000" val="0x0"/>
-</pat_block>
-</instruct_pat>
-</pair>
-</decision>
-<decision number="12" context="false" start="8" size="3">
-<decision number="1" context="false" start="0" size="0">
-<pair id="6">
-<instruct_pat>
-<pat_block offset="0" nonzero="2">
-  <mask_word mask="0x3e00000" val="0x1000000"/>
-</pat_block>
-</instruct_pat>
-</pair>
-</decision>
-<decision number="1" context="false" start="0" size="0">
-<pair id="6">
-<instruct_pat>
-<pat_block offset="0" nonzero="2">
-  <mask_word mask="0x3e00000" val="0x1200000"/>
-</pat_block>
-</instruct_pat>
-</pair>
-</decision>
-<decision number="1" context="false" start="0" size="0">
-<pair id="6">
-<instruct_pat>
-<pat_block offset="0" nonzero="2">
-  <mask_word mask="0x3e00000" val="0x1400000"/>
-</pat_block>
-</instruct_pat>
-</pair>
-</decision>
-<decision number="0" context="false" start="0" size="0">
-</decision>
-<decision number="1" context="false" start="0" size="0">
-<pair id="6">
-<instruct_pat>
-<pat_block offset="0" nonzero="2">
-  <mask_word mask="0x3e00000" val="0x1800000"/>
-</pat_block>
-</instruct_pat>
-</pair>
-</decision>
-<decision number="1" context="false" start="0" size="0">
-<pair id="6">
-<instruct_pat>
-<pat_block offset="0" nonzero="2">
-  <mask_word mask="0x3e00000" val="0x1a00000"/>
-</pat_block>
-</instruct_pat>
-</pair>
-</decision>
-<decision number="1" context="false" start="0" size="0">
-<pair id="6">
-<instruct_pat>
-<pat_block offset="0" nonzero="2">
-  <mask_word mask="0x3e00000" val="0x1c00000"/>
 </pat_block>
 </instruct_pat>
 </pair>
@@ -2244,8 +2187,8 @@
 </pair>
 <pair id="6">
 <instruct_pat>
-<pat_block offset="0" nonzero="2">
-  <mask_word mask="0x3e00000" val="0x1e00000"/>
+<pat_block offset="0" nonzero="1">
+  <mask_word mask="0x3000000" val="0x1000000"/>
 </pat_block>
 </instruct_pat>
 </pair>
@@ -2260,8 +2203,8 @@
 </pair>
 <pair id="6">
 <instruct_pat>
-<pat_block offset="0" nonzero="2">
-  <mask_word mask="0x3e00000" val="0x1e00000"/>
+<pat_block offset="0" nonzero="1">
+  <mask_word mask="0x3000000" val="0x1000000"/>
 </pat_block>
 </instruct_pat>
 </pair>
@@ -2276,8 +2219,8 @@
 </pair>
 <pair id="6">
 <instruct_pat>
-<pat_block offset="0" nonzero="2">
-  <mask_word mask="0x3e00000" val="0x1e00000"/>
+<pat_block offset="0" nonzero="1">
+  <mask_word mask="0x3000000" val="0x1000000"/>
 </pat_block>
 </instruct_pat>
 </pair>
@@ -2292,8 +2235,8 @@
 </pair>
 <pair id="6">
 <instruct_pat>
-<pat_block offset="0" nonzero="2">
-  <mask_word mask="0x3e00000" val="0x1e00000"/>
+<pat_block offset="0" nonzero="1">
+  <mask_word mask="0x3000000" val="0x1000000"/>
 </pat_block>
 </instruct_pat>
 </pair>
@@ -2308,8 +2251,8 @@
 </pair>
 <pair id="6">
 <instruct_pat>
-<pat_block offset="0" nonzero="2">
-  <mask_word mask="0x3e00000" val="0x1e00000"/>
+<pat_block offset="0" nonzero="1">
+  <mask_word mask="0x3000000" val="0x1000000"/>
 </pat_block>
 </instruct_pat>
 </pair>
@@ -2317,8 +2260,8 @@
 <decision number="1" context="false" start="0" size="0">
 <pair id="6">
 <instruct_pat>
-<pat_block offset="0" nonzero="2">
-  <mask_word mask="0x3e00000" val="0x1e00000"/>
+<pat_block offset="0" nonzero="1">
+  <mask_word mask="0x3000000" val="0x1000000"/>
 </pat_block>
 </instruct_pat>
 </pair>
@@ -2326,8 +2269,8 @@
 <decision number="1" context="false" start="0" size="0">
 <pair id="6">
 <instruct_pat>
-<pat_block offset="0" nonzero="2">
-  <mask_word mask="0x3e00000" val="0x1e00000"/>
+<pat_block offset="0" nonzero="1">
+  <mask_word mask="0x3000000" val="0x1000000"/>
 </pat_block>
 </instruct_pat>
 </pair>
@@ -2335,12 +2278,11 @@
 <decision number="1" context="false" start="0" size="0">
 <pair id="6">
 <instruct_pat>
-<pat_block offset="0" nonzero="2">
-  <mask_word mask="0x3e00000" val="0x1e00000"/>
+<pat_block offset="0" nonzero="1">
+  <mask_word mask="0x3000000" val="0x1000000"/>
 </pat_block>
 </instruct_pat>
 </pair>
-</decision>
 </decision>
 </decision>
 <decision number="1" context="false" start="0" size="0">

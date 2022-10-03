@@ -57,7 +57,7 @@ data: "@XAP_AL"            is f_mode=1 & f_opnd=0xe1           { export al; }
 data: "@XAP_UXH"           is f_mode=1 & f_opnd=0xe2           { export xh; }
 data: "@XAP_UXL"           is f_mode=1 & f_opnd=0xe3           { export xl; }
 data: "@XAP_UY"            is f_mode=1 & f_opnd=0xe4           { export y; }
-data: "@H'"uimmval         is f_mode=1 & dummy1!=0x3 & uimmval { export *[mem]:2 uimmval; }
+data: "@H'"uimmval         is f_mode=1 & uimmval               { export *[mem]:2 uimmval; }
 
 data: "@(#"f_sopnd^, "x)" is f_mode=2 & f_sopnd & ext1 { 
     local tmp:2 = (sext(ext1:1) << 8) + sext(f_sopnd:1) + xl; # should be xh or xl?
