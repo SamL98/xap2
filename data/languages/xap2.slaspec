@@ -12,8 +12,7 @@ define register offset=0x8 size=1 [ c s n z ];
 define register offset=0x100 size=4 contextreg;
 
 define context contextreg
-    ext1=(0,7) noflow
-    ext2=(8,15) noflow
+    ext=(0,15) signed noflow
     u=(16,16) noflow
     num_prefix=(17,18) noflow
 ;
@@ -41,12 +40,12 @@ attach variables [ f_mode ] [ _ _ xl y ];
 attach variables [ f_ld ] [ _ _ _ _ _ _ xl y _ _ _ _ _ _ xh _ ];
 attach variables [ f_st ] [ _ _ xl y _ _ _ _ _ _ xh _ _ _ _ _ ];
 
-uimmval: val                is f_opnd & ext1
-[ val = f_opnd + (ext1 << 8); ]
+uimmval: val                is f_opnd & ext
+[ val = f_opnd + (ext << 8); ]
 { export *[const]:2 val; }
 
-simmval: val                is f_sopnd & ext1
-[ val = f_sopnd + (ext1 << 8); ]
+simmval: val                is f_sopnd & ext
+[ val = f_sopnd + (ext << 8); ]
 { export *[const]:2 val; }
 
 imm: "#"simmval            is simmval                          { export simmval; }
@@ -59,33 +58,42 @@ data: "@XAP_UXL"           is f_mode=1 & f_opnd=0xe3           { export xl; }
 data: "@XAP_UY"            is f_mode=1 & f_opnd=0xe4           { export y; }
 data: "@H'"uimmval         is f_mode=1 & uimmval               { export *[mem]:2 uimmval; }
 
-data: "@(#"f_sopnd^, "x)" is f_mode=2 & f_sopnd & ext1 { 
-    local tmp:2 = (sext(ext1:1) << 8) + sext(f_sopnd:1) + xl; # should be xh or xl?
-    export *[mem]:2 tmp; 
-}
-data: "@(#"f_sopnd^, "y)" is f_mode=3 & f_sopnd & ext1 { 
-    local tmp:2 = (sext(ext1:1) << 8) + sext(f_sopnd:1) + y; 
+data: "@(#"off^, "x)"      is f_mode=2 & f_sopnd & ext 
+[ off = f_sopnd + (ext << 8); ]
+{ 
+    local tmp:2 = xl + off; # should be xh or xl?
     export *[mem]:2 tmp; 
 }
 
-branch_addr: reloc     is f_mode=0 & f_opnd & ext1 & ext2 & num_prefix
-[ reloc = (inst_start + num_prefix) + ((f_opnd + (ext1 << 8) + (ext2 << 16)) * (((-2) * (ext2 >> 7)) + 1)); ]
+data: "@(#"off^, "y)"      is f_mode=3 & f_sopnd & ext
+[ off = f_sopnd + (ext << 8); ]
+{
+    local tmp:2 = y + off; 
+    export *[mem]:2 tmp; 
+}
+
+branch_addr: reloc           is f_mode=0 & f_sopnd & ext & num_prefix
+[ reloc = inst_start + num_prefix + f_sopnd + (ext << 8); ]
 { export *[code]:3 reloc; }
 
-branch_addr: "@"f_opnd          is f_mode=1 & f_opnd  { 
+branch_addr: "@"f_opnd       is f_mode=1 & f_opnd  { 
     local tmp:2 = zext(f_opnd:1); 
     tmp = (0xff00 * (tmp >> 7)) + tmp; 
     local ptr:3 = zext(tmp);
     export *[mem]:3 ptr; 
 }
-branch_addr: "X + #"f_opnd      is f_mode=2 & f_opnd & ext1 & ext2  { 
-    local tmp:3 = zext(f_opnd:1) + zext(xh); 
-    tmp = tmp + (zext(ext1:1) << 8) + (zext(ext2:1) << 16);
+
+branch_addr: "X + #"off      is f_mode=2 & f_sopnd & ext  
+[ off = f_sopnd + (ext << 8); ]
+{ 
+    local tmp:3 = zext(xh) + off; 
     export *[code]:3 tmp; 
 }
-branch_addr: "@(#"f_opnd^, "y)" is f_mode=3 & f_opnd & ext1 { 
-    local tmp:3 = zext(f_opnd:1) + zext(y); 
-    tmp = tmp + (zext(ext1:1) << 8);
+
+branch_addr: "@(#"off^, "y)" is f_mode=3 & f_sopnd & ext 
+[ off = f_sopnd + (ext << 8); ]
+{ 
+    local tmp:3 = sext(f_sopnd:1) + zext(y); 
     export *[mem]:3 tmp; 
 }
 
@@ -101,10 +109,9 @@ macro csnzflags(op1, op2, value) {
  z = value == 0;
 }
 
-:^instruction is (f_byte=0 & f_opnd); instruction
+:^instruction is (f_byte=0 & f_sopnd); instruction
 [
-    ext2 = ext1; 
-    ext1 = f_opnd; 
+    ext = (ext << 8) + f_sopnd;
     num_prefix = num_prefix + 1;
 ]
 {
