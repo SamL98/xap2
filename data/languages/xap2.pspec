@@ -4,8 +4,8 @@
   <programcounter register="pc"/>
   <data_space space="mem"/>
 
-  <default_memory_blocks>
+  <!--<default_memory_blocks>
     <memory_block name="mem" start_address="mem:0x0" length="0x10000" initialized="false"/>
-  </default_memory_blocks>
+  </default_memory_blocks>-->
 
 </processor_spec>
