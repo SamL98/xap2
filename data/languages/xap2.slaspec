@@ -142,7 +142,7 @@ macro csnzflags(op1, op2, value) {
 
 :st f_reg, data is f_opc=2 & f_reg & data & f_mode!=0 {
     data = f_reg;
-    nzflags(data);
+    nzflags(f_reg);
 }
 
 :add f_reg, data is f_opc=3 & f_reg & data {
